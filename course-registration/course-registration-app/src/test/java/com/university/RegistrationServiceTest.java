@@ -210,4 +210,71 @@ class RegistrationServiceTest {
         assertTrue(student.isRegistered("CS303"));
         assertEquals(3, student.getTotalCredits());
     }
+
+    @Test
+    void shouldCreateOneAuditEntryForSuccessfulRegistration() {
+        Student student = new Student("S201", "Anita");
+        Course course = new Course(
+                "CS501", "Database Systems", 4, 30, true, null
+        );
+
+        RegistrationService service = new RegistrationService();
+
+        assertTrue(service.register(student, course));
+
+        assertEquals(1, service.getAuditLog().size());
+        assertEquals(
+                "studentId=S201, courseCode=CS501",
+                service.getAuditLog().get(0)
+        );
+    }
+
+    @Test
+    void shouldNotCreateAuditEntryForRejectedRegistration() {
+        Student student = new Student("S202", "Rahul");
+        Course course = new Course(
+                "CS502", "Computer Networks", 3, 10, false, null
+        );
+
+        RegistrationService service = new RegistrationService();
+
+        assertFalse(service.register(student, course));
+        assertTrue(service.getAuditLog().isEmpty());
+        assertEquals(0, course.getCurrentEnrollment());
+        assertEquals(0, student.getTotalCredits());
+    }
+
+    @Test
+    void shouldPreserveAuditEntryAfterLaterRegistrationFails() {
+        Student firstStudent = new Student("S203", "Priya");
+        Student secondStudent = new Student("S204", "Arun");
+
+        Course course = new Course(
+                "CS503", "Operating Systems", 4, 1, true, null
+        );
+
+        RegistrationService service = new RegistrationService();
+
+        // First registration succeeds and creates one entry.
+        assertTrue(service.register(firstStudent, course));
+        assertEquals(1, service.getAuditLog().size());
+
+        String originalEntry = service.getAuditLog().get(0);
+
+        // The second registration is rejected because the course is full.
+        assertFalse(service.register(secondStudent, course));
+
+        // The original audit entry must remain unchanged.
+        assertEquals(1, service.getAuditLog().size());
+        assertEquals(originalEntry, service.getAuditLog().get(0));
+        assertEquals(
+                "studentId=S203, courseCode=CS503",
+                service.getAuditLog().get(0)
+        );
+
+        assertEquals(1, course.getCurrentEnrollment());
+        assertEquals(4, firstStudent.getTotalCredits());
+        assertEquals(0, secondStudent.getTotalCredits());
+    }
+
 }
