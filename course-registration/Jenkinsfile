@@ -1,8 +1,8 @@
+
 pipeline {
     agent any
 
     options {
-        skipDefaultCheckout(true)
         timestamps()
     }
 
@@ -31,16 +31,16 @@ pipeline {
     post {
         always {
             junit(
-                testResults: 'course-registration-app/target/surefire-reports/TEST-*.xml',
-                allowEmptyResults: true
+                testResults: 'target/surefire-reports/TEST-*.xml',
+                allowEmptyResults: false
             )
         }
 
         success {
             archiveArtifacts(
-                artifacts: 'course-registration-app/target/*.jar',
-                allowEmptyArchive: false,
-                fingerprint: true
+                artifacts: 'target/*.jar',
+                fingerprint: true,
+                allowEmptyArchive: false
             )
         }
 
@@ -49,3 +49,4 @@ pipeline {
         }
     }
 }
+
