@@ -47,8 +47,5 @@ pipeline {
         failure {
             echo 'Pipeline failed. Check the console output and test reports.'
         }
-        always {
-            echo 'Pipeline executed.'
-        }
     }
 }
